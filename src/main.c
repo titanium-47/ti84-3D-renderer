@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <keypadc.h>
 #include <string.h>
+#include <math.h>
 
 #define BUFFER_1 0xD40000
 #define BUFFER_2 0xD52C00
@@ -122,15 +123,17 @@ struct point2d projectPoint(struct point3d point) {
 
 void drawCube(uint8_t color, struct cube cube) {
     struct point3d points[8];
-    points[0] = (struct point3d){cube.x, cube.y, cube.z};
-    points[1] = (struct point3d){cube.x+cube.size, cube.y, cube.z};
-    points[2] = (struct point3d){cube.x+cube.size, cube.y+cube.size, cube.z};
-    points[3] = (struct point3d){cube.x, cube.y+cube.size, cube.z};
-    points[4] = (struct point3d){cube.x, cube.y, cube.z+cube.size};
-    points[5] = (struct point3d){cube.x+cube.size, cube.y, cube.z+cube.size};
-    points[6] = (struct point3d){cube.x+cube.size, cube.y+cube.size, cube.z+cube.size};
-    points[7] = (struct point3d){cube.x, cube.y+cube.size, cube.z+cube.size};
+    float halfSize = cube.size/2;
 
+    points[0] = (struct point3d){cube.x - halfSize, cube.y - halfSize, cube.z - halfSize};
+    points[1] = (struct point3d){cube.x + halfSize, cube.y - halfSize, cube.z - halfSize};
+    points[2] = (struct point3d){cube.x + halfSize, cube.y + halfSize, cube.z - halfSize};
+    points[3] = (struct point3d){cube.x - halfSize, cube.y + halfSize, cube.z - halfSize};
+    points[4] = (struct point3d){cube.x - halfSize, cube.y - halfSize, cube.z + halfSize};
+    points[5] = (struct point3d){cube.x + halfSize, cube.y - halfSize, cube.z + halfSize};
+    points[6] = (struct point3d){cube.x + halfSize, cube.y + halfSize, cube.z + halfSize};
+    points[7] = (struct point3d){cube.x - halfSize, cube.y + halfSize, cube.z + halfSize};
+    
     struct point2d projectedPoints[8];
     for (int i = 0; i < 8; i++) {
         projectedPoints[i] = projectPoint(points[i]);
@@ -146,10 +149,29 @@ void drawCube(uint8_t color, struct cube cube) {
 
 int main(void) {
     gfx_Begin();
+    struct cube cube = (struct cube){WIDTH/2, HEIGHT/2, 200, 100, 0, 0, 0};
     do {
         kb_Scan();
+        if (kb_Data[7] & kb_Left) {
+            cube.xrot -= 0.05;
+        }
+        if (kb_Data[7] & kb_Right) {
+            cube.xrot += 0.05;
+        }
+        if (kb_Data[7] & kb_Up) {
+            cube.yrot -= 0.05;
+        }
+        if (kb_Data[7] & kb_Down) {
+            cube.yrot += 0.05;
+        }
+        if (kb_Data[1] & kb_Del) {
+            cube.zrot -= 0.05;
+        }
+        if (kb_Data[4] & kb_Stat) {
+            cube.zrot += 0.05;
+        }
         
-        drawCube(0x00, (struct cube){50, 50, 300, 100, 0, 0, 0});
+        drawCube(0x00, cube);
 
         render();
         clearBuffer();
