@@ -124,26 +124,35 @@ struct point2d projectPoint(struct point3d point) {
 void drawCube(uint8_t color, struct cube cube) {
     struct point3d points[8];
     float halfSize = cube.size/2;
+    float diagSize = halfSize*1.41421;
+    float piof = 3.1415/4;
 
-    points[0] = (struct point3d){cube.x - halfSize, cube.y - halfSize, cube.z - halfSize};
-    points[1] = (struct point3d){cube.x + halfSize, cube.y - halfSize, cube.z - halfSize};
-    points[2] = (struct point3d){cube.x + halfSize, cube.y + halfSize, cube.z - halfSize};
-    points[3] = (struct point3d){cube.x - halfSize, cube.y + halfSize, cube.z - halfSize};
-    points[4] = (struct point3d){cube.x - halfSize, cube.y - halfSize, cube.z + halfSize};
-    points[5] = (struct point3d){cube.x + halfSize, cube.y - halfSize, cube.z + halfSize};
-    points[6] = (struct point3d){cube.x + halfSize, cube.y + halfSize, cube.z + halfSize};
-    points[7] = (struct point3d){cube.x - halfSize, cube.y + halfSize, cube.z + halfSize};
-    
+    float cxrot = cosf(cube.xrot - piof);
+    float sxrot = sinf(cube.xrot - piof);
+    float cyrot = cosf(cube.yrot - piof);
+    float syrot = sinf(cube.yrot - piof);
+    float czrot = cosf(cube.zrot - piof);
+    float szrot = sinf(cube.zrot - piof);
+
+    points[0] = (struct point3d){cube.x + diagSize*szrot, cube.y - diagSize*czrot, cube.z + halfSize};
+    points[1] = (struct point3d){cube.x + diagSize*szrot, cube.y - diagSize*czrot, cube.z - halfSize};
+    points[2] = (struct point3d){cube.x + diagSize*czrot, cube.y + diagSize*szrot, cube.z - halfSize};
+    points[3] = (struct point3d){cube.x + diagSize*czrot, cube.y + diagSize*szrot, cube.z + halfSize};
+    points[4] = (struct point3d){cube.x - diagSize*czrot, cube.y - diagSize*szrot, cube.z + halfSize};
+    points[5] = (struct point3d){cube.x - diagSize*czrot, cube.y - diagSize*szrot, cube.z - halfSize};
+    points[6] = (struct point3d){cube.x - diagSize*szrot, cube.y + diagSize*czrot, cube.z - halfSize};
+    points[7] = (struct point3d){cube.x - diagSize*szrot, cube.y + diagSize*czrot, cube.z + halfSize};
+
     struct point2d projectedPoints[8];
     for (int i = 0; i < 8; i++) {
         projectedPoints[i] = projectPoint(points[i]);
     }
     drawPolygon(color, (struct point2d[]){projectedPoints[0], projectedPoints[1], projectedPoints[2], projectedPoints[3]}, 4);
-    drawPolygon(color, (struct point2d[]){projectedPoints[4], projectedPoints[5], projectedPoints[6], projectedPoints[7]}, 4);
-    drawLine(color, projectedPoints[0], projectedPoints[4]);
-    drawLine(color, projectedPoints[1], projectedPoints[5]);
-    drawLine(color, projectedPoints[2], projectedPoints[6]);
-    drawLine(color, projectedPoints[3], projectedPoints[7]);
+    drawPolygon(0xE0, (struct point2d[]){projectedPoints[4], projectedPoints[5], projectedPoints[6], projectedPoints[7]}, 4);
+    drawLine(0x07, projectedPoints[0], projectedPoints[4]);
+    drawLine(0x07, projectedPoints[1], projectedPoints[5]);
+    drawLine(0x07, projectedPoints[2], projectedPoints[6]);
+    drawLine(0x07, projectedPoints[3], projectedPoints[7]);
 }
  
 
