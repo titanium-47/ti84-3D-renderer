@@ -121,27 +121,50 @@ struct point2d projectPoint(struct point3d point) {
     return (struct point2d){(int)x2 + WIDTH/2, (int)y2 + HEIGHT/2};
 }
 
-void drawCube(uint8_t color, struct cube cube) {
-    struct point3d points[8];
+struct point3d* cubeToPoints(struct cube cube) {
     float halfSize = cube.size/2;
-    float diagSize = halfSize*1.41421;
-    float piof = 3.1415/4;
+    
+    return (struct point3d[8]){
+        (struct point3d){cube.x + halfSize, cube.y + halfSize, cube.z + halfSize},
+        (struct point3d){cube.x + halfSize, cube.y + halfSize, cube.z - halfSize},
+        (struct point3d){cube.x + halfSize, cube.y - halfSize, cube.z + halfSize},
+        (struct point3d){cube.x + halfSize, cube.y - halfSize, cube.z - halfSize},
+        (struct point3d){cube.x - halfSize, cube.y + halfSize, cube.z + halfSize},
+        (struct point3d){cube.x - halfSize, cube.y + halfSize, cube.z - halfSize},
+        (struct point3d){cube.x - halfSize, cube.y - halfSize, cube.z + halfSize},
+        (struct point3d){cube.x - halfSize, cube.y - halfSize, cube.z - halfSize}
+    }; 
+}
 
-    float cxrot = cosf(cube.xrot - piof);
-    float sxrot = sinf(cube.xrot - piof);
-    float cyrot = cosf(cube.yrot - piof);
-    float syrot = sinf(cube.yrot - piof);
-    float czrot = cosf(cube.zrot - piof);
-    float szrot = sinf(cube.zrot - piof);
+void translate3D(float x, float y, float z, struct point3d nodes[8]) {
+    for (int n=0; n<8; n++) {
+        struct point3d* node = &nodes[n];
+        node->x += x;
+        node->y += y;
+        node->z += z;
+    }
+}
 
-    points[0] = (struct point3d){cube.x + diagSize*szrot, cube.y - diagSize*czrot, cube.z + halfSize};
-    points[1] = (struct point3d){cube.x + diagSize*szrot, cube.y - diagSize*czrot, cube.z - halfSize};
-    points[2] = (struct point3d){cube.x + diagSize*czrot, cube.y + diagSize*szrot, cube.z - halfSize};
-    points[3] = (struct point3d){cube.x + diagSize*czrot, cube.y + diagSize*szrot, cube.z + halfSize};
-    points[4] = (struct point3d){cube.x - diagSize*czrot, cube.y - diagSize*szrot, cube.z + halfSize};
-    points[5] = (struct point3d){cube.x - diagSize*czrot, cube.y - diagSize*szrot, cube.z - halfSize};
-    points[6] = (struct point3d){cube.x - diagSize*szrot, cube.y + diagSize*czrot, cube.z - halfSize};
-    points[7] = (struct point3d){cube.x - diagSize*szrot, cube.y + diagSize*czrot, cube.z + halfSize};
+void rotate3D(float xrot, float yrot, float zrot, struct point3d nodes[8]) {
+    float cxrot = cosf(xrot);
+    float sxrot = sinf(xrot);
+    float cyrot = cosf(yrot);
+    float syrot = sinf(yrot);
+    float czrot = cosf(zrot);
+    float szrot = sinf(zrot);
+    
+    for (int n=0; n<8; n++) {
+        struct point3d* node = &nodes[n];
+        node->x = node->x * czrot - node->y * szrot + node->x * cyrot + node->z * syrot;
+        node->y = node->y * czrot + node->x * szrot + node->y * cxrot - node->z * sxrot;
+        node->z = node->z * cyrot - node->x * syrot + node->z * cxrot + node->y * sxrot;
+    }
+}
+
+void drawCube(uint8_t color, struct cube cube) {
+    struct point3d* points = cubeToPoints(cube);
+    rotate3D(cube.xrot, cube.yrot, cube.zrot, points);
+    translate3D(cube.x, cube.y, cube.z, points);
 
     struct point2d projectedPoints[8];
     for (int i = 0; i < 8; i++) {
