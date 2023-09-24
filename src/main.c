@@ -121,19 +121,17 @@ struct point2d projectPoint(struct point3d point) {
     return (struct point2d){(int)x2 + WIDTH/2, (int)y2 + HEIGHT/2};
 }
 
-struct point3d* cubeToPoints(struct cube cube) {
+void cubeToPoints(struct cube cube, struct point3d points[8]) {
     float halfSize = cube.size/2;
     
-    return (struct point3d[8]){
-        (struct point3d){cube.x + halfSize, cube.y + halfSize, cube.z + halfSize},
-        (struct point3d){cube.x + halfSize, cube.y + halfSize, cube.z - halfSize},
-        (struct point3d){cube.x + halfSize, cube.y - halfSize, cube.z + halfSize},
-        (struct point3d){cube.x + halfSize, cube.y - halfSize, cube.z - halfSize},
-        (struct point3d){cube.x - halfSize, cube.y + halfSize, cube.z + halfSize},
-        (struct point3d){cube.x - halfSize, cube.y + halfSize, cube.z - halfSize},
-        (struct point3d){cube.x - halfSize, cube.y - halfSize, cube.z + halfSize},
-        (struct point3d){cube.x - halfSize, cube.y - halfSize, cube.z - halfSize}
-    }; 
+    points[0] = (struct point3d){0 - halfSize, 0 - halfSize, halfSize};
+    points[1] = (struct point3d){0 - halfSize, 0 - halfSize, 0 - halfSize};
+    points[2] = (struct point3d){halfSize, 0 - halfSize, 0 - halfSize};
+    points[3] = (struct point3d){halfSize, 0 - halfSize, halfSize};
+    points[4] = (struct point3d){0 - halfSize, halfSize, halfSize};
+    points[5] = (struct point3d){0 - halfSize, halfSize, 0 - halfSize};
+    points[6] = (struct point3d){halfSize, halfSize, 0 - halfSize};
+    points[7] = (struct point3d){halfSize, halfSize, halfSize};
 }
 
 void translate3D(float x, float y, float z, struct point3d nodes[8]) {
@@ -162,7 +160,8 @@ void rotate3D(float xrot, float yrot, float zrot, struct point3d nodes[8]) {
 }
 
 void drawCube(uint8_t color, struct cube cube) {
-    struct point3d* points = cubeToPoints(cube);
+    struct point3d points[8];
+    cubeToPoints(cube, points);
     rotate3D(cube.xrot, cube.yrot, cube.zrot, points);
     translate3D(cube.x, cube.y, cube.z, points);
 
@@ -181,20 +180,31 @@ void drawCube(uint8_t color, struct cube cube) {
 
 int main(void) {
     gfx_Begin();
-    struct cube cube = (struct cube){WIDTH/2, HEIGHT/2, 200, 100, 0, 0, 0};
+    struct cube cube = (struct cube){WIDTH/2, HEIGHT/2, 200, 50, 0, 0, 0};
+    drawCube(0x00, cube);
+    render();
+    clearBuffer();
     do {
+        for (int i = 0; i<8; i++) {
+            if (kb_Data[i]>0) {
+                drawCube(0x00, cube);
+                render();
+                clearBuffer();
+            }
+        }
+        
         kb_Scan();
         if (kb_Data[7] & kb_Left) {
-            cube.xrot -= 0.05;
-        }
-        if (kb_Data[7] & kb_Right) {
-            cube.xrot += 0.05;
-        }
-        if (kb_Data[7] & kb_Up) {
             cube.yrot -= 0.05;
         }
-        if (kb_Data[7] & kb_Down) {
+        if (kb_Data[7] & kb_Right) {
             cube.yrot += 0.05;
+        }
+        if (kb_Data[7] & kb_Up) {
+            cube.xrot -= 0.05;
+        }
+        if (kb_Data[7] & kb_Down) {
+            cube.xrot += 0.05;
         }
         if (kb_Data[1] & kb_Del) {
             cube.zrot -= 0.05;
@@ -202,11 +212,6 @@ int main(void) {
         if (kb_Data[4] & kb_Stat) {
             cube.zrot += 0.05;
         }
-        
-        drawCube(0x00, cube);
-
-        render();
-        clearBuffer();
     } while (!(kb_Data[6] & kb_Enter));
     gfx_End();
 }
